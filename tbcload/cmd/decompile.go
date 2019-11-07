@@ -20,7 +20,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/corbamico/tbcload"
+	"github.com/mvphilip/tbcload"
 	"github.com/spf13/cobra"
 )
 
