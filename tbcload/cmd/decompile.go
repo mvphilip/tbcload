@@ -75,7 +75,7 @@ func parseFile(uri string) {
 	p := tbcload.NewParser(r, os.Stdout)
 	p.Detail = detail
 	if err = p.Parse(); err != nil {
-		fmt.Printf("failed parse line (%s), error as (%s)\n", uri, err)
+		fmt.Printf("MPMPMP failed parse line (%s), error as (%s)\n", uri, err)
 	}
 }
 func parseURL(uri string) {
