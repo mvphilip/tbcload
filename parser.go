@@ -35,6 +35,8 @@ const tbcFileBeginWith = "TclPro ByteCode "
 //Parse from io.Reader
 func (p *Parser) Parse() (err error) {
 	if err = p.skipUntil(tbcFileBeginWith); err != nil {
+		fmt.Printf("masking error")
+		
 		//return
 	}
 	err = p.parseByteCode()
@@ -48,6 +50,7 @@ func (p *Parser) skipUntil(prefix string) (err error) {
 	for {
 		if nRead, err = p.r.ReadRaw(buf[:]); err != nil {
 			//return
+			fmt.Printf("Masking error")
 			err = nil
 		}
 		if strings.HasPrefix(string(buf[:nRead]), prefix) {
