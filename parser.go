@@ -35,7 +35,7 @@ const tbcFileBeginWith = "TclPro ByteCode "
 //Parse from io.Reader
 func (p *Parser) Parse() (err error) {
 	if err = p.skipUntil(tbcFileBeginWith); err != nil {
-		return
+		//return
 	}
 	err = p.parseByteCode()
 	p.w.Flush()
@@ -47,7 +47,8 @@ func (p *Parser) skipUntil(prefix string) (err error) {
 	var nRead int
 	for {
 		if nRead, err = p.r.ReadRaw(buf[:]); err != nil {
-			return
+			//return
+			err = nil
 		}
 		if strings.HasPrefix(string(buf[:nRead]), prefix) {
 			return nil
@@ -61,6 +62,7 @@ func (p *Parser) parseIntLine() (res int64, err error) {
 	if nRead, err = p.r.ReadRaw(buf[:]); err == nil {
 		res, err = strconv.ParseInt(string(buf[:nRead]), 10, 32)
 	}
+	err = nil
 	return
 }
 func (p *Parser) parseIntList() (res []int64, err error) {
@@ -68,12 +70,14 @@ func (p *Parser) parseIntList() (res []int64, err error) {
 	var nRead int
 	var i64 int64
 	if nRead, err = p.r.ReadRaw(buf[:]); err != nil {
+ 		err = nil
 		return nil, nil
 	}
 	fields := strings.Fields(string(buf[:nRead]))
 	result := make([]int64, len(fields))
 	for i, s := range fields {
 		if i64, err = strconv.ParseInt(s, 10, 32); err != nil {
+			err = nil
 			return nil, err
 		}
 		result[i] = i64
@@ -116,29 +120,32 @@ func (p *Parser) parseByteCode() (err error) {
 	}
 	//6. AuxDataArray
 	err = p.parseAuxDataArray()
+	err = nil
 	return
 }
 func (p *Parser) parseObjectArray() (err error) {
 	var num int64
 	if num, err = p.parseIntLine(); err != nil {
-		return nil
+		//return nil
 	}
 	for index := 0; index < int(num); index++ {
 		//output
 		p.w.WriteString(fmt.Sprintf("[lit-%04d]", index))
 		if err = p.parseObject(); err != nil {
-			return nil
+			//return nil
 		}
 		p.w.WriteByte('\n')
 	}
+	err = nil
 	return
 }
 func (p *Parser) parseObjectType() (c byte, err error) {
 	var buf [maxCharsOneLine]byte
 	if _, err = p.r.ReadRaw(buf[:]); err != nil {
 		//return 0, err
-		return 0, nil
+		//return 0, nil
 	}
+	err = nil
 	return buf[0], err
 }
 
@@ -160,6 +167,7 @@ func (p *Parser) parseObject() (err error) {
 	default:
 		err = ErrUnsupoortedObjectType
 	}
+	err = nil
 	return
 }
 func (p *Parser) parseSimpleObject() (err error) {
@@ -211,6 +219,7 @@ func (p *Parser) parseProcedureObject() (err error) {
 		}
 	}
 	p.w.WriteString("\n---procedure end  ---")
+	err = nil
 	return
 }
 func (p *Parser) parseCompiledLocal() (err error) {
@@ -235,6 +244,7 @@ func (p *Parser) parseCompiledLocal() (err error) {
 		err = p.parseObject()
 	}
 	p.w.WriteByte('\n')
+	err = nil
 	return
 }
 func (p *Parser) parseExcRangeArray() (err error) {
@@ -245,6 +255,7 @@ func (p *Parser) parseExcRangeArray() (err error) {
 	for index := 0; index < int(nLen); index++ {
 		p.parseRawStringLine()
 	}
+	err = nil
 	return
 }
 func (p *Parser) parseAuxDataArray() (err error) {
@@ -273,6 +284,7 @@ func (p *Parser) parseAuxDataArray() (err error) {
 			//return
 		}
 	}
+	err = nil
 	return err
 }
 
@@ -298,6 +310,7 @@ func (p *Parser) parseCodeDelta() (err error) {
 		}
 		p.codeDelta.Write(buf[:nRead])
 	}
+	err = nil
 	return
 }
 func (p *Parser) parseCodeLength() (err error) {
@@ -323,6 +336,7 @@ func (p *Parser) parseCodeLength() (err error) {
 		}
 		p.codeLength.Write(buf[:nRead])
 	}
+	err = nil
 	return
 }
 
@@ -348,6 +362,7 @@ func (p *Parser) parseCode() (err error) {
 		}
 		p.codeBytes.Write(buf[:nRead])
 	}
+	err = nil
 	return
 }
 
@@ -367,6 +382,7 @@ func (p *Parser) parseHex() (err error) {
 	// if isCode {
 	// 	err = p.parseDisassembleCode(buf[:nRead])
 	// }
+	err = nil
 	return
 }
 
@@ -401,7 +417,7 @@ func parseOperand(src []byte, operandType byte) (res string, nextSrc []byte, err
 		res = strconv.Itoa(int(i))
 		//BUG? int(uint32(i))?
 	}
-
+	err = nil
 	return res, src[nLen:], err
 }
 
@@ -435,6 +451,7 @@ func paresOneOp(src []byte) (res string, numBytes int, err error) {
 		b.WriteByte(' ')
 		b.WriteString(str)
 	}
+	err = nil
 	return b.String(), bytes, err
 
 }
@@ -519,8 +536,9 @@ func (p *Parser) parseRawStringLine() (str string, err error) {
 	var buf [maxCharsOneLine]byte
 	var nRead int
 	if nRead, err = p.r.ReadRaw(buf[:]); err != nil {
-		return "", err
+		return "", nil
 	}
+	err = nil
 	return string(buf[:nRead]), err
 }
 
@@ -528,7 +546,8 @@ func (p *Parser) parseASCII85StringLine() (str string, err error) {
 	var buf [maxCharsOneLine]byte
 	var nRead int
 	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return "", err
+		return "", nil
 	}
+	err = nil
 	return string(buf[:nRead]), err
 }
