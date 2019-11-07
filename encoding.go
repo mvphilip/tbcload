@@ -141,6 +141,7 @@ func (d *Decoder) Read(p []byte) (nRead int, err error) {
 //ReadRaw only read  from wrapped io without Decoding
 func (d *Decoder) ReadRaw(p []byte) (nRead int, err error) {
 	nRead, err = d.wrapped.Read(p)
+	err = nil
 	return
 }
 
