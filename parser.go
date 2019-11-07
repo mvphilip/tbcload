@@ -68,7 +68,7 @@ func (p *Parser) parseIntList() (res []int64, err error) {
 	var nRead int
 	var i64 int64
 	if nRead, err = p.r.ReadRaw(buf[:]); err != nil {
-		return nil, err
+		return nil, nil
 	}
 	fields := strings.Fields(string(buf[:nRead]))
 	result := make([]int64, len(fields))
@@ -84,35 +84,35 @@ func (p *Parser) parseByteCode() (err error) {
 	//1. procedure struct info
 
 	if _, err = p.parseRawStringLine(); err != nil {
-		return
+		//return
 	}
 	//2. ByteCode
 	if err = p.parseCode(); err != nil {
-		return
+		//return
 	}
 	//3. CodeDelta
 	if err = p.parseCodeDelta(); err != nil {
-		return
+		//return
 	}
 	//4. CodeLength
 	if err = p.parseCodeLength(); err != nil {
-		return
+		//return
 	}
 
 	//if dump all instruction
 	if p.Detail {
 		if err = p.parseDecompile(); err != nil {
-			return
+			//return
 		}
 	}
 
 	//5. ObjectArray
 	if err = p.parseObjectArray(); err != nil {
-		return
+		//return
 	}
 	//6. ExcRangeArray
 	if err = p.parseExcRangeArray(); err != nil {
-		return
+		//return
 	}
 	//6. AuxDataArray
 	err = p.parseAuxDataArray()
@@ -121,13 +121,13 @@ func (p *Parser) parseByteCode() (err error) {
 func (p *Parser) parseObjectArray() (err error) {
 	var num int64
 	if num, err = p.parseIntLine(); err != nil {
-		return err
+		return nil
 	}
 	for index := 0; index < int(num); index++ {
 		//output
 		p.w.WriteString(fmt.Sprintf("[lit-%04d]", index))
 		if err = p.parseObject(); err != nil {
-			return err
+			return nil
 		}
 		p.w.WriteByte('\n')
 	}
@@ -136,7 +136,8 @@ func (p *Parser) parseObjectArray() (err error) {
 func (p *Parser) parseObjectType() (c byte, err error) {
 	var buf [maxCharsOneLine]byte
 	if _, err = p.r.ReadRaw(buf[:]); err != nil {
-		return 0, err
+		//return 0, err
+		return 0, nil
 	}
 	return buf[0], err
 }
@@ -147,7 +148,7 @@ var ErrUnsupoortedObjectType = errors.New("object type is not supported")
 func (p *Parser) parseObject() (err error) {
 	var objType byte
 	if objType, err = p.parseObjectType(); err != nil {
-		return err
+		//return err
 	}
 	switch objType {
 	case 'i', 'd', 's':
@@ -165,7 +166,7 @@ func (p *Parser) parseSimpleObject() (err error) {
 	var buf [maxCharsOneLine]byte
 	var nRead int
 	if nRead, err = p.r.ReadRaw(buf[:]); err != nil {
-		return err
+		//return err
 	}
 
 	//output
@@ -177,14 +178,14 @@ func (p *Parser) parseXStringObject() (err error) {
 	var nRead int
 	var nLen int64
 	if nLen, err = p.parseIntLine(); err != nil {
-		return err
+		//return err
 	}
 	if nLen == 0 {
 		p.r.ReadRaw(buf[:])
 		return nil
 	}
 	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return err
+		//return err
 	}
 
 	//output
@@ -197,16 +198,16 @@ func (p *Parser) parseProcedureObject() (err error) {
 	p.w.WriteString("\n---procedure begin---\n")
 	//1. ByteCode
 	if err = p.parseByteCode(); err != nil {
-		return
+		//return
 	}
 	//2. numArgs numCompiledLocal
 	if lengths, err = p.parseIntList(); err != nil || len(lengths) != 2 {
-		return
+		//return
 	}
 	//3. for-loop {CompiledLocal}
 	for index := 0; index < int(lengths[1]); index++ {
 		if err = p.parseCompiledLocal(); err != nil {
-			return
+			//return
 		}
 	}
 	p.w.WriteString("\n---procedure end  ---")
@@ -217,14 +218,14 @@ func (p *Parser) parseCompiledLocal() (err error) {
 	var ints []int64
 	//1. name
 	if _, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	if sName, err = p.parseASCII85StringLine(); err != nil {
-		return
+		//return
 	}
 	//2. index hasDef mask
 	if ints, err = p.parseIntList(); err != nil || len(ints) != 3 {
-		return
+		//return
 	}
 	ss := fmt.Sprintf("[local-%02d]name=%s,hasDefault=%d ", ints[0], sName, ints[1])
 	p.w.WriteString(ss)
@@ -239,7 +240,7 @@ func (p *Parser) parseCompiledLocal() (err error) {
 func (p *Parser) parseExcRangeArray() (err error) {
 	var nLen int64
 	if nLen, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	for index := 0; index < int(nLen); index++ {
 		p.parseRawStringLine()
@@ -250,7 +251,7 @@ func (p *Parser) parseAuxDataArray() (err error) {
 	//TODO we dont support AuxData parser. later.
 	var num int64
 	if num, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	for index := 0; index < int(num); index++ {
 		//we only support CMP_FOREACH_INFO('F')
@@ -260,16 +261,16 @@ func (p *Parser) parseAuxDataArray() (err error) {
 		//numVars
 		//*varIndexesPtr
 		if _, err = p.parseRawStringLine(); err != nil {
-			return
+			//return
 		}
 		if _, err = p.parseRawStringLine(); err != nil {
-			return
+			//return
 		}
 		if _, err = p.parseRawStringLine(); err != nil {
-			return
+			//return
 		}
 		if _, err = p.parseRawStringLine(); err != nil {
-			return
+			//return
 		}
 	}
 	return err
@@ -280,10 +281,10 @@ func (p *Parser) parseCodeDelta() (err error) {
 	var nRead int
 	var nRes int64
 	if nRes, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return
+		//return
 	}
 	p.codeDelta.Reset()
 
@@ -304,10 +305,10 @@ func (p *Parser) parseCodeLength() (err error) {
 	var nRead int
 	var nRes int64
 	if nRes, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return
+		//return
 	}
 
 	p.codeLength.Reset()
@@ -330,10 +331,10 @@ func (p *Parser) parseCode() (err error) {
 	var nRead int
 	var nRes int64
 	if nRes, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return
+		//return
 	}
 	p.codeBytes.Reset()
 
@@ -355,10 +356,10 @@ func (p *Parser) parseHex() (err error) {
 	var buf [20480]byte
 	var nRead int
 	if _, err = p.parseIntLine(); err != nil {
-		return
+		//return
 	}
 	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return
+		//return
 	}
 	s := hex.EncodeToString(buf[:nRead])
 	_, err = p.w.WriteString(s)
